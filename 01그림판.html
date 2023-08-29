@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그림판</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+
+    <script>
+        var outCanvas, outCtx, inFile;
+        var outPaper;
+
+        var inImageArray, outImageArray;
+        var inWidth, inHeight, outWidth, outHeight;
+
+        function init() {
+            outCanvas = document.getElementById('outCanvas');
+            outCtx = outCanvas.getContext('2d');
+        }
+
+        function clear2() {
+            const outCanvas = document.getElementById('outCanvas');
+            const ctx = outCanvas.getContext('2d');
+            ctx.clearRect(0, 0, outCanvas.width, outCanvas.height);
+        }
+
+        function openImage() {
+            inFile = document.getElementById('seletFile').files[0];
+            inWidth = inHeight = Math.sqrt(inFile.size);
+            inImageArray = new Array(inHeight);
+            for (var i = 0; i < inHeight; i++)
+                inImageArray[i] = new Array(inHeight);
+            var reader = new FileReader();
+            reader.readAsBinaryString(inFile);
+            reader.onload = function() {
+                var bin = reader.result;
+                for (var i = 0; i < inHeight; i++) {
+                    for (var k = 0; k < inWidth; k++) {
+                        var sPixel = (i * inHeight + k);
+                        var ePixel = (i * inHeight + k) + 1;
+                        inImageArray[i][k] = bin.slice(sPixel, ePixel);
+                    }
+                }
+                equalImage();
+            }
+        }
+
+        function displayImage() {
+            outCanvas.width = outWidth;
+            outCanvas.height = outHeight;
+            outPaper = outCtx.createImageData(outHeight, outWidth);
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; K < outWidth; k++) {
+                    var charValue = outImageArray[i][k].charCodeAt(0);
+                    outPaper.data[(i * outWidth + k) * 4 + 0] = charValue;
+                    outPaper.data[(i * outWidth + k) * 4 + 1] = charValue;
+                    outPaper.data[(i * outWidth + k) * 4 + 2] = charValue;
+                    outPaper.data[(i * outWidth + k) * 4 + 3] = 255;
+                }
+            }
+            outCtx.putImageData(outPaper, 0, 0);
+        }
+
+        function equalImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    outImageArray[i][k] = inImageArray[i][k];
+                }
+            }
+            displayImage();
+        }
+
+        function addImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var value = parseInt(document.getElementById("brightI").value);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel + value > 255) {
+                        pixel = 255;
+                    } else if (pixel + value < 0) {
+                        pixel = 0;
+                    } else {
+                        pixel += value;
+                    }
+                    outImageArray[i][k] = String.fromCharCode(pixel);
+                }
+            }
+            displayImage();
+        }
+
+        function bwImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var value = parseInt(document.getElementById("blackwhite").value);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel > value)
+                        pixel = 255;
+                    else
+                        pixel = 0;
+                    outImageArray[i][k] = String.fromCharCode(pixel);
+                }
+            }
+            displayImage();
+        }
+
+        function bwImageAvg() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var hap = 0;
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++)
+                    hap += inImageArray[i][k].charCodeAt(0);
+            var value = hap / (inHeight * inWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel > value)
+                        pixel = 255;
+                    else
+                        pixel = 0;
+                    outImageArray[i][k] = String.fromCharCode(pixel);
+                }
+            }
+            displayImage();
+        }
+
+        function poaterizingImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel >= 231) {
+                        pixel = 255;
+                    } else if (pixel >= 206) {
+                        pixel = 230;
+                    } else if (pixel >= 181) {
+                        pixel = 205;
+                    } else if (pixel >= 156) {
+                        pixel = 180;
+                    } else if (pixel >= 131) {
+                        pixel = 155;
+                    } else if (pixel >= 106) {
+                        pixel = 130;
+                    } else if (pixel >= 81) {
+                        pixel = 105;
+                    } else if (pixel >= 56) {
+                        pixel = 80;
+                    } else if (pixel >= 31) {
+                        pixel = 55;
+                    } else pixel = 0;
+
+                    outImageArray[i][k] = String.fromCharCode(pixel);
+                }
+            }
+            displayImage();
+        }
+
+        function zoomOutImage() {
+            var scale = parseInt(prompt("축소 배율(짝수)", "2"));
+            outHeight = parseInt(inHeight / scale);
+            outWidth = parseInt(inHeight / scale);
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; K < inWidth; k++) {
+                    outImageArray[parseInt(i / scale)][parseInt(k / scale)] = inImageArray[i][k];
+                }
+            }
+            displayImage();
+        }
+
+        function zoomInImage() {
+            var scale = parseInt(prompt("확대 배율(짝수)", "2"));
+            outHeight = inHeight * scale;
+            outWidth = inWidth * scale;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++)
+                    outImageArray[i][k] = String.fromCharCode(0);
+
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    outImageArray[i][k] = inImageArray[parseInt(i / scale)][parseInt(k / scale)];
+                }
+            }
+            displayImage();
+        }
+
+        function lrImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    outImageArray[i][k] = inImageArray[i][inWidth - 1 - k];
+                }
+            }
+            displayImage();
+        }
+
+        function udImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    outImageArray[i][k] = inImageArray[inHeight - 1 - i][k];
+                }
+            }
+            displayImage();
+        }
+
+        function rotaImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    outImageArray[i][k] = inImageArray[inWidth - 1 - i][k];
+                }
+            }
+
+            for (var i = 0; i < outWidth; i++) {
+                for (var k = i; k < outHeight; k++) {
+                    tmp = outImageArray[i][k];
+                    outImageArray[i][k] = outImageArray[k][i];
+                    outImageArray[k][i] = tmp;
+                }
+            }
+            displayImage();
+        }
+
+        function rotalImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++)
+                    outImageArray[i][k] = String / fromCharCode(0);
+
+            var degree = parseFloat(prompt("회전각도", 45));
+            var radian = degree * Math.PI / 180.0;
+
+            var xd, yd, xs, ys;
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    xs = i;
+                    ys = k;
+                    xd = parseInt(Math.cos(radian) * xs - Math.sin(radian) * ys);
+                    yd = parseInt(Math.sin(radian) * xs + Math.cos(radian) * ys);
+
+                    if ((0 <= xd && xd < outHeight) && (0 <= yd && yd < outWidth))
+                        outImageArray[xd][yd] = inImageArray[xs][ys];
+                }
+            }
+            displayImage();
+        }
+
+        function rota2Image() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++)
+                    outImageArray[i][k] = String.fromCharCode(0);
+
+            var degree = parseFloat(prompt("회전각도", 45));
+            var radian = degree * Math.PI / 180.0;
+            radian = -radian;
+            var xd, xy, xs, ys;
+            var cx = parseInt(inHeight / 2);
+            var cy = parseInt(inWidth / 2);
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    xs = i;
+                    ys = k;
+                    xd = parseInt(Math.cos(radian) * (xs - cx) - Math.sin(radian) * (ys - cy) + cy);
+                    yd = parseInt(Math.sin(radian) * (xs - cx) + Math.cos(radian) * (ys - cy) + cy);
+
+                    if ((0 <= xd && xd < outHeight) && (0 <= yd && yd < outWidth))
+                        outImageArray[xs][ys] = inImageArray[xd][yd];
+                    else
+                        outImageArray[xs][ys] = String.fromCharCode(255);
+                }
+            }
+            displayImage();
+        }
+
+        function histoStretch() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var low = inImageArray[0][0].charCodeAt(0);
+            var high = inImageArray[0][0].charCodeAt(0);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel < low)
+                        low = pixel;
+                    if (pixel > high)
+                        high = pixel
+                }
+            }
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    inVal = inImageArray[i][k].charCodeAt(0);
+                    outVal = (inVal - low) / (high - low) * 255;
+                    outImageArray[i][k] = String.fromCharCode(outVal);
+                }
+            }
+            displayImage();
+        }
+
+        function endInSearch() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var low = inImageArray[0][0].charCodeAt(0);
+            var high = inImageArray[0][0].charCodeAt(0);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    pixel = inImageArray[i][k].charCodeAt(0);
+                    if (pixel < low)
+                        low = pixel;
+                    if (pixel > high)
+                        high = pixel
+                }
+            }
+            low += 50;
+            high -= 50;
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    inVal = inImageArray[i][k].charCodeAt(0);
+                    outVal = (inVal - low) / (high - low) * 255;
+                    if (outVal > 255)
+                        outVal = 255;
+                    else if (outVal < 0)
+                        outVal = 0;
+                    outImageArray[i][k] = String.fromCharCode(outVal);
+                }
+            }
+            displayImage();
+        }
+
+        function histoEqual() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            histo = new Array(256);
+            for (var i = 0; i < 256; i++)
+                histo[i] = 0;
+            for (var i = 0; i < 256; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    value = inImageArray[i][k].charCodeAt(0);
+                    histo[value]++;
+                }
+            sumHisto = new Array(256);
+            for (var i = 0; i < 256; i++)
+                sumHisto[i] = 0;
+            sumVal = 0;
+            for (var i = 0; i < 256; i++) {
+                sumVal = 0;
+                sumHisto[i] = sumVal;
+            }
+            normalHisto = new Array(256);
+            for (var i = 0; i < 256; i++)
+                noyrmalHisto[i] = 0.0;
+            for (var i = 0; i < 256; i++)
+                normalHisto[i] = sumHisto[i] * (1 / (inWidth * inHeight)) * 255;
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    inVal = inImageArray[i][k].charCodeAt(0);
+                    outVal = normalHisto[inVal];
+                    if (outVal > 255)
+                        outVal = 255;
+                    else if (outVal < 0)
+                        outVal = 0;
+                    else
+                        outVal = parseInt(outVal);
+                    outImageArray[i][k] = String.fromCharCode(outVal);
+                }
+            }
+            displayImage();
+        }
+
+        function graphImage() {
+            var histo = new Array(256);
+            for (var i = 0; i < 256; i++)
+                histo[i] = 0;
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    value = inImageArray[i][k].charCodeAt(0);
+                    histo[value]++;
+                }
+            }
+            var max = 0;
+            var min = outHeight * outWidth;
+
+            for (var i = 0; i < 256; i++) {
+                if (histo[i] < min)
+                    min = histo[i];
+                if (histo[i] > max)
+                    max = histo[i];
+            }
+            var dif = max - min
+            var normalHisto = new Array(256);
+            for (var i = 0; i < 256; i++) {
+                normalHisto[i] = (histo[i] - min) * 255 / dif;
+            }
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    outImageArray[i][k] = 255;
+                }
+            }
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < normalHisto[i]; k++) {
+                    outImageArray[outHeight - 1 - k][i] = 0;
+                }
+            }
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    outImageArray[i][k] = String.fromCharCode(outImageArray[i][k]);
+                }
+            }
+            displayImage();
+        }
+
+        function embossImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [-1., 0., 0.],
+                [0., 0., 0.],
+                [0., 0., 1.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; K < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++)
+                    tempOutputArray[i][k] += 127.0;
+
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function blurrImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [1 / 9., 1 / 9., 1 / 9.],
+                [1 / 9., 1 / 9., 1 / 9.],
+                [1 / 9., 1 / 9., 1 / 9.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function edgeImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [0., 0., 0.],
+                [-1., 1., 0.],
+                [0., 0., 0.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; K < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function laplacianImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [1., 1., 1.],
+                [1., -8., 1.],
+                [1., 1., 1.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; K < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        V = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function sharpeningImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [0., -1., 0.],
+                [-1., 5., -1.],
+                [0., -1., 0.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function gaussianImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [1 / 16., 1 / 8., 1 / 16.],
+                [1 / 8., 1 / 4., 1 / 8.],
+                [1 / 16., 1 / 8., 1 / 6.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; K++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function hpfSharpImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [-1 / 9., -1 / 9., -1 / 9.],
+                [-1 / 9., 8 / 9., -1 / 9.],
+                [-1 / 9., -1 / 9., -1 / 9.]
+            ]
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function loGImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [0., 0., -1., 0., 0.],
+                [0., -1., -2., -1., 0.],
+                [-1., -2., 16., -2. - 1.],
+                [0., -1., -2., -1., 0.],
+                [0., 0., -1., 0., 0.]
+            ]
+            tempInputArray = new Array(inHeight + 4);
+            for (var i = 0; i < inHeight + 4; i++)
+                tempInputArray[i] = new Array(inWidth + 4);
+            for (var i = 0; i < inHeight + 4; i++)
+                for (var k = 0; k < inWidth + 4; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 5; m++) {
+                        for (var n = 0; n < 5; n++) {
+                            S += mask[m][n] * tempOutputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function doGImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+
+            var mask = [
+                [0., 0., 0., -1., -1., -1., 0., 0., 0.],
+                [0., -2., -3., -3., -3., -3., -3., -2., 0.],
+                [0., -3., -2., -1., -1., -1., -2., -3., 0.],
+                [-1., -3., -1., 9., 9., 9., -1., -3., -1.],
+                [-1., -3., -1., 9., 19., 9., -1., -3., -1.],
+                [-1., -3., -1., 9., 9., 9., -1., -3., -1.],
+                [0., -3., -2., -1., -1., -1., -2., -3., 0.],
+                [0., -2., -3., -3., -3., -3., -3., -2., 0.],
+                [0., 0., 0., -1., -1., -1., 0., 0., 0.]
+            ]
+            tempInputArray = new Array(inHeight + 8);
+            for (var i = 0; i, inHeight + 8; i++)
+                tempInputArray[i] = new Array(inWidth + 8);
+            for (var i = 0; i < inHeight + 8; i++)
+                for (var k = 0; k < inWidth + 8; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    var S = 0.0;
+                    for (var m = 0; m < 9; m++) {
+                        for (var n = 0; n < 9; n++) {
+                            S += mask[m][n] * tempInputArray[i + m][k + n].charCodeAt(0);
+                        }
+                    }
+                    tempOutputArray[i][k] = S;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; jk < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v - 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function onHomogenImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeigh + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(!27);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            var max;
+            for (var i = 0; i < inHeight; i++) {
+                for (var k = 0; k < inWidth; k++) {
+                    max = 0.0;
+                    for (var m = 0; m < 3; m++) {
+                        for (var n = 0; n < 3; n++) {
+                            if (Math.abs(tempInputArray[i + 1][k + 1].charCodeAt(0) - tempInputArray[i + m][k + n].charCodeAt(0)) >= max)
+                                max = Math.abs(tempInputArray[i + 1][k + 1].charCodeAt(0) - tempInputArray[i + m][k + n].charCodeAt(0));
+                        }
+                    }
+                    tempOutputArray[i][k] = max;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function chaImage() {
+            outHeight = inHeight;
+            outWidth = inWidth;
+            outImageArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                outImageArray[i] = new Array(outWidth);
+            tempInputArray = new Array(inHeight + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                tempInputArray[i] = new Array(inWidth + 2);
+            for (var i = 0; i < inHeight + 2; i++)
+                for (var k = 0; k < inWidth + 2; k++)
+                    tempInputArray[i][k] = String.fromCharCode(127);
+            for (var i = 0; i < inHeight; i++)
+                for (var k = 0; k < inWidth; k++) {
+                    tempInputArray[i + 1][k + 1] = inImageArray[i][k];
+                }
+            tempOutputArray = new Array(outHeight);
+            for (var i = 0; i < outHeight; i++)
+                tempOutputArray[i] = new Array(outWidth);
+            var max;
+            for (var i = 0; i < outHeight; i++) {
+                for (var k = 0; k < outWidth; k++) {
+                    var max = 0.0;
+                    pixel = Math.abs(tempInputArray[i + 0][k + 0].charCodeAt(0) - tempInputArray[i + 2][k + 2].charCodeAt(0));
+                    if (pixel >= max)
+                        max = pixel;
+                    pixel = Math.abs(tempInputArray[i + 0][K + 1].charCodeAt(0) - tempInputArray[i + 2][k + 1].charCodeAt(0));
+                    if (pixel >= max)
+                        max = pixel;
+                    pixel = Math.abs(tempInputArray[i + 0][k + 2].charCodeAt(0) - tempInputArray[i + 2][k + 0].charCodeAt(0));
+                    if (pixel >= max)
+                        max = pixel;
+                    pixel = Math.abs(tempInputArray[i + 1][k + 2].charCodeAt(0) - tempInputArray[i + 1][k + 0].charCodeAt(0));
+                    if (pixel >= max)
+                        max = pixel;
+                    tempOutputArray[i][k] = max;
+                }
+            }
+            for (var i = 0; i < outHeight; i++)
+                for (var k = 0; k < outWidth; k++) {
+                    var v = tempOutputArray[i][k];
+                    if (v > 255.0)
+                        v = 255.0;
+                    if (v < 0)
+                        v = 0.0;
+                    outImageArray[i][k] = String.fromCharCode(v);
+                }
+            displayImage();
+        }
+
+        function saveImage() {
+            console.log("saveImage()");
+            var imageName = "image";
+            console.log(imageName.lenght);
+            if (imageName.length == 0) {
+                imageName = "image";
+            }
+            imageName += ".png";
+            var saveImage = document.getElementById("saveImage");
+            var image = document
+                .getElementById("outCanvas")
+                .toDataURL("image/png")
+                .replace("image/png", "image/octet-stream");
+            saveImage.setAttribute("download", imageName);
+            saveImage.setAttribute("href", image);
+        }
+    </script>
+</head>
+
+<body onload="init()">
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            background-image: url('coverImage.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        
+        nav {
+            margin-left: 1%;
+        }
+        
+        span {
+            margin-left: 1%;
+        }
+        
+        .leftBox {
+            margin-left: 1%;
+            margin-right: 2%;
+            width: 11%;
+            float: left;
+        }
+        
+        .canvas {
+            height: 50%;
+            width: 50%;
+            margin-left: -256px;
+            margin-right: 0%;
+            margin-top: -256px;
+        }
+        
+        .rightBox {
+            width: 11%;
+            float: right;
+        }
+        
+        .tab {
+            white-space: pre;
+        }
+    </style>
+    <div>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="home.html">  HR</a>
+        <span class="navbar-toggler" type="button" data-toggle="collapse" data-taret="#navbarColor03" aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+        </span>
+
+        <div class="collapse navbar-collapse" id="navbarColor03">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="home.html">home
+                            <span class="sr-only">(Back)</span>
+                        </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="btn-group btn-group-toggle" data-toggle="button"></div>
+    <span>
+            <input class="btn btn-outline-secondary" type="file" id="seletFile" onchange="openImage()"/>
+        </span>
+    </span><br><br>
+    <div class="leftBox">
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <div class="btn-group-vertical">
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="equalImage()" style="font-size: small;">동일영상</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="chaedo" onclick="document.getElementById('bright').style.display='block'">밝기</span>
+                <input type="range" max="255" min="-255" value="0" class="btn btn-outline-secondary btn-sm" id="brightI" onclick="addImage()" style="display: none">
+                <span type="button" class="btn btn-outline-dark btn-sm" id="chaedo" onclick="document.getElementById('blackwhite').style.display='block'">흑백</span>
+                <input type="range" max="255" min="0" value="127" class="btn btn-outline-secondary btn-sm" id="blackwhite" onclick="bwImage()" style="display: none">
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="bwImageAvg()" style="font-size: small;">흑백(평균값)</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="poaterizingImage()" style="font-size: small;">포스터라이징</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="zoomOutImage()" style="font-size: small;">축소</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="zoomInImage()" style="font-size: small;">확대</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="lrImage()" style="font-size: small;">좌우반대</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="udImage()" style="font-size: small;">상하반전</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="rotaImage()" style="font-size: small;">오른쪽 회전</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="rotalImage()" style="font-size: small;">회전 기본</span>
+                <span type="button" class="btn btn-outline-dark btn-sm" id="photo" onclick="rota2Image()" style="font-size: small;">회전 백워딩</span>
+
+            </div>
+        </div>
+    </div>
+
+    <canvas id="outCanvas" style="background: rgb(255, 255, 255);"></canvas>
+
+    <div class="rightBox">
+        <div class="btn-group-vertical" data-toggle="buttons">
+            <div class="btn-group-vertical">
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="histoStretch()" style="font-size: small;">히스토그램 스트레칭</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="endInSearch()" style="font-size: small;">엔드-인 탐색</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="histoEqual()" style="font-size: small;">히스토그램 평활화</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="graphImage()" style="font-size: small;">그래프</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="embossImage()" style="font-size: small;">엠보싱처리</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="blurrImage()" style="font-size: small;">블러처리</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="edgeImage()" style="font-size: small;">엣지검출</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="laplacianImage()" style="font-size: small;">라플라시안</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="gaussianImage()" style="font-size: small;">가우시안</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="sharpeningImage()" style="font-size: small;">샤프닝</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="hpfSharpImage()" style="font-size: small;">고주파 샤프닝</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="loGImage()" style="font-size: small;">LoG</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="doGImage()" style="font-size: small;">DoG</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="onHomogenImage()" style="font-size: small;">유사 연산자</span>
+                <span type="button" class="btn btn-outline-secondary" id="free" onclick="chaImage()" style="font-size: small;">차 연산자</span>
+                <a id="saveImage" download="image.png" type="button" class="btn btn-outline-secondary" value="Save" onClick="saveImage()">저장</a>
+            </div>
+        </div>
+
+</body>
+
+</html>
