@@ -52,7 +52,7 @@
             outCanvas.height = outHeight;
             outPaper = outCtx.createImageData(outHeight, outWidth);
             for (var i = 0; i < outHeight; i++) {
-                for (var k = 0; K < outWidth; k++) {
+                for (var k = 0; k < outWidth; k++) {
                     var charValue = outImageArray[i][k].charCodeAt(0);
                     outPaper.data[(i * outWidth + k) * 4 + 0] = charValue;
                     outPaper.data[(i * outWidth + k) * 4 + 1] = charValue;
@@ -865,7 +865,7 @@
                             S += mask[m][n] * tempOutputArray[i + m][k + n].charCodeAt(0);
                         }
                     }
-                    tempOutputArray = S;
+                    tempOutputArray[i][k] = S;
                 }
             }
             for (var i = 0; i < outHeight; i++)
@@ -926,7 +926,7 @@
                 for (var k = 0; jk < outWidth; k++) {
                     var v = tempOutputArray[i][k];
                     if (v > 255.0)
-                        v - 255.0;
+                        v = 255.0;
                     if (v < 0)
                         v = 0.0;
                     outImageArray[i][k] = String.fromCharCode(v);
@@ -941,7 +941,7 @@
             for (var i = 0; i < outHeight; i++)
                 outImageArray[i] = new Array(outWidth);
             tempInputArray = new Array(inHeight + 2);
-            for (var i = 0; i < inHeigh + 2; i++)
+            for (var i = 0; i < inHeight + 2; i++)
                 tempInputArray[i] = new Array(inWidth + 2);
             for (var i = 0; i < inHeight + 2; i++)
                 for (var k = 0; k < inWidth + 2; k++)
@@ -1031,7 +1031,7 @@
         function saveImage() {
             console.log("saveImage()");
             var imageName = "image";
-            console.log(imageName.lenght);
+            console.log(imageName.length);
             if (imageName.length == 0) {
                 imageName = "image";
             }
@@ -1048,6 +1048,7 @@
 </head>
 
 <body onload="init()">
+
 
     <style>
         html,
